@@ -1,4 +1,4 @@
-module Top_Level();
+module Top_level();
 // need to code that shit
 // for now add the modules that you want to call, with a descreption of what they do
 // also write what inputs they take and what ouputs they give, similar to what i have down 
@@ -20,5 +20,5 @@ draw_box drawer(givex, // takes in the x starting cordinate
 				x, // returns back the wire that needs to go to vga adapter through decoder
 				y, // returns back the wire that needs to go to vga adapter through decoder 
 				);
-				
+endmodule
 // by decoder i mean a huge ass mux, that allows to pick which state are we taking the input from since we can only have only 1 vga adapter
