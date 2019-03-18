@@ -7,8 +7,8 @@ module upstate(atTop,
 
 input atTop;// IDK IF THIS SHIT IS A REGESTER CAUSE I GOT TO UPDATE THE VALUE BUT IDK How TO DO THAT
 input player;
-output reg[7:0] x;
-output reg[7:0] y;
+output reg x;
+output reg y;
 
 always@(*moved)
 begin
