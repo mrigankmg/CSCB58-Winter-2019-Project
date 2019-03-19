@@ -1,23 +1,27 @@
 module draw_box(givex, givey, size, x, y);
 
-	input givex;
-	input givey;
+	input[7:0] givex;
+	input[6:0] givey;
 	input size;
-	output reg x; //if does not work try removing reg
-	output reg y; //if does not work remove reg
+	integer index;
+	integer subI;
+	output reg[7:0] x; //if does not work try removing reg
+	output reg[6:0] y; //if does not work remove reg
+	
 
-	assign x <= givex;
-	assign y <= givey;
-	always*()
+	always @(*)
 	begin
+			x <= givex;
+			y <= givey;
 		for( index = 0; index < size; index = index + 1)
 		begin
 			for(subI = 0; subI < size ; subI = subI + 1)
 			begin
-				x <= x + 1;
+				x <= x + 00000001;
 			end
-			y <= givey + 1;
+			y <= givey + 00000001;
 			x <= givex;
 		end
 	end
+	
 endmodule
