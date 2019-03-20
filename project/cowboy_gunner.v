@@ -20,7 +20,7 @@ module cowboy_gunner
 
 	input			CLOCK_50;				//	50 MHz
 	input   [3:0]   KEY;
-	input   [1:0]   SW;
+	input   [17:0]   SW;
 	output [17:0] LEDR;
 
 	// Declare your inputs and outputs here
@@ -201,6 +201,14 @@ module cowboy_gunner
 							p1_t_y = p1_t_y - 1'b1;
 							p1_g_y = p1_g_y - 1'b1;
 						end
+						if (SW[3] && p1_t_x > 8'd123) begin
+							p1_t_x = p1_t_x - 1'b1;
+							p1_g_x = p1_g_x - 1'b1;
+						end
+						if (SW[2] && p1_t_x < 8'd144) begin
+							p1_t_x = p1_t_x + 1'b1;
+							p1_g_x = p1_g_x + 1'b1;
+						end
 						state = DRAW_PLAYER_1_TANK;
 				 end
 				 DRAW_PLAYER_1_TANK: begin
@@ -257,6 +265,14 @@ module cowboy_gunner
 						if (~KEY[3] && p2_t_y > 8'd10) begin
 							p2_t_y = p2_t_y - 1'b1;
 							p2_g_y = p2_g_y - 1'b1;
+						end
+						if (SW[16] && p2_t_x < 8'd30) begin
+							p2_t_x = p2_t_x + 1'b1;
+							p2_g_x = p2_g_x + 1'b1;
+						end
+						if (SW[17] && p2_t_x > 8'd8) begin
+							p2_t_x = p2_t_x - 1'b1;
+							p2_g_x = p2_g_x - 1'b1;
 						end
 						state = DRAW_PLAYER_2_TANK;
 				 end
