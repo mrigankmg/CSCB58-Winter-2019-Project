@@ -33,7 +33,7 @@ module cowboy_gunner
 	output	[9:0]	VGA_R;   				//	VGA Red[9:0]
 	output	[9:0]	VGA_G;	 				//	VGA Green[9:0]
 	output	[9:0]	VGA_B;   				//	VGA Blue[9:0]
-    
+
 
 	// Create an Instance of a VGA controller - there can be only one!
 	// Define the number of colours as well as the initial background
@@ -62,24 +62,30 @@ module cowboy_gunner
 	 reg [5:0] state;
 	 reg border_init, player_1_init, player_2_init;
 	 reg [7:0] x, y;
-	 reg [7:0] p1_x, p1_y, p2_x, p2_y;
+	 reg [7:0] p1_t_x, p1_t_y, p1_g_x, p1_g_y, p2_t_x, p2_t_y, p2_g_x, p2_g_y;
 	 reg [2:0] colour;
 	 reg [17:0] draw_counter;
 	 wire frame;
 
 	 assign LEDR[5:0] = state;
-	 
+
 	 localparam  RESET_BLACK       = 6'b000000,
-                INIT_PLAYER_1     = 6'b000001,
-					 INIT_PLAYER_2     = 6'b000010,
-                IDLE              = 6'b000011,
-					 ERASE_PLAYER_1	 = 6'b000100,
-                UPDATE_PLAYER_1   = 6'b000101,
-					 DRAW_PLAYER_1	    = 6'b000110,
-					 ERASE_PLAYER_2	 = 6'b000111,
-                UPDATE_PLAYER_2   = 6'b001000,
-					 DRAW_PLAYER_2	    = 6'b001001,
-					 DEAD    		    = 6'b001010;
+                INIT_PLAYER_1_TANK     = 6'b000001,
+					 INIT_PLAYER_1_GUN     = 6'b000010,
+					 INIT_PLAYER_2_TANK     = 6'b000011,
+		 		 	 INIT_PLAYER_2_GUN     = 6'b000100,
+                IDLE              = 6'b000101,
+					 ERASE_PLAYER_1_TANK	 = 6'b000110,
+					 ERASE_PLAYER_1_GUN	 = 6'b000111,
+                UPDATE_PLAYER_1   = 6'b001000,
+					 DRAW_PLAYER_1_TANK	    = 6'b001001,
+					 DRAW_PLAYER_1_GUN	    = 6'b001010,
+					 ERASE_PLAYER_2_TANK	 = 6'b001011,
+					 ERASE_PLAYER_2_GUN	 = 6'b001100,
+                UPDATE_PLAYER_2   = 6'b001101,
+					 DRAW_PLAYER_2_TANK	    = 6'b001110,
+					 DRAW_PLAYER_2_GUN	    = 6'b001111,
+					 DEAD    		    = 6'b010000;
 
 	clock(.clock(CLOCK_50), .clk(frame));
 	 //assign LEDR[7] = ((b_y_direction) && (b_y > p_y - 8'd1) && (b_y < p_y + 8'd2) && (b_x >= p_x) && (b_x <= p_x + 8'd8));
@@ -101,89 +107,175 @@ module cowboy_gunner
 			end
 			else begin
 				draw_counter= 8'b00000000;
-				state = INIT_PLAYER_1;
+				state = INIT_PLAYER_1_TANK;
 			end
 		  end
-    			 INIT_PLAYER_1: begin
+    			 INIT_PLAYER_1_TANK: begin
 					 if (draw_counter < 9'b10000000) begin
-					 p1_x = 8'd144;
-					 p1_y = 8'd50;
-						x = p1_x + draw_counter[7:4];
-						y = p1_y + draw_counter[3:0];
+					 p1_t_x = 8'd144;
+					 p1_t_y = 8'd50;
+						x = p1_t_x + draw_counter[7:4];
+						y = p1_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
 						colour = 3'b011;
 					end
 					else begin
 						draw_counter= 8'b00000000;
-						state = INIT_PLAYER_2;
+						state = INIT_PLAYER_1_GUN;
 					end
 				 end
-				 INIT_PLAYER_2: begin
+				 INIT_PLAYER_1_GUN: begin
+				 if (draw_counter < 6'b10000) begin
+				 p1_g_x = 8'd134;
+				 p1_g_y = 8'd53;
+					x = p1_g_x + draw_counter[3:0];
+					y = p1_g_y + draw_counter[4];
+					draw_counter = draw_counter + 1'b1;
+					colour = 3'b011;
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = INIT_PLAYER_2_TANK;
+				end
+			 end
+				 INIT_PLAYER_2_TANK: begin
 					 if (draw_counter < 9'b10000000) begin
-					 p2_x = 8'd10;
-					 p2_y = 8'd50;
-						x = p2_x + draw_counter[7:4];
-						y = p2_y + draw_counter[3:0];
+					 p2_t_x = 8'd10;
+					 p2_t_y = 8'd50;
+						x = p2_t_x + draw_counter[7:4];
+						y = p2_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
 						colour = 3'b111;
 					end
 					else begin
 						draw_counter= 8'b00000000;
-						state = IDLE;
+						state = INIT_PLAYER_2_GUN;
 					end
 				 end
+				 INIT_PLAYER_2_GUN: begin
+				 if (draw_counter < 6'b10000) begin
+				 p2_g_x = 8'd30;
+				 p2_g_y = 8'd53;
+					x = p2_g_x + draw_counter[3:0];
+					y = p2_g_y + draw_counter[4];
+					draw_counter = draw_counter + 1'b1;
+					colour = 3'b111;
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = IDLE;
+				end
+			 end
 				 IDLE: begin
 				 if (frame)
-					state = ERASE_PLAYER_1;
+					state = ERASE_PLAYER_1_TANK;
 				 end
-				 ERASE_PLAYER_1: begin
+				 ERASE_PLAYER_1_TANK: begin
 					if (draw_counter < 9'b10000000) begin
-						x = p1_x + draw_counter[7:4];
-						y = p1_y + draw_counter[3:0];
+						x = p1_t_x + draw_counter[7:4];
+						y = p1_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
 					end
 					else begin
 						draw_counter= 8'b00000000;
-						state = UPDATE_PLAYER_1;
+						state = ERASE_PLAYER_1_GUN;
 					end
 				 end
+				 ERASE_PLAYER_1_GUN: begin
+				 if (draw_counter < 6'b10000) begin
+					x = p1_g_x + draw_counter[3:0];
+					y = p1_g_y + draw_counter[4];
+					draw_counter = draw_counter + 1'b1;
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = UPDATE_PLAYER_1;
+				end
+			 end
 				 UPDATE_PLAYER_1: begin
-						if (~KEY[0] && p1_y < 8'd100) p1_y = p1_y + 1'b1;
-						if (~KEY[1] && p1_y > 8'd10) p1_y = p1_y - 1'b1;
-						state = DRAW_PLAYER_1;	
+						if (~KEY[0] && p1_t_y < 8'd100) begin
+							p1_t_y = p1_t_y + 1'b1;
+							p1_g_y = p1_g_y + 1'b1;
+						end
+						if (~KEY[1] && p1_t_y > 8'd10) begin
+							p1_t_y = p1_t_y - 1'b1;
+							p1_g_y = p1_g_y - 1'b1;
+						end
+						state = DRAW_PLAYER_1_TANK;
 				 end
-				 DRAW_PLAYER_1: begin
+				 DRAW_PLAYER_1_TANK: begin
 					if (draw_counter < 9'b10000000) begin
-						x = p1_x + draw_counter[7:4];
-						y = p1_y + draw_counter[3:0];
+						x = p1_t_x + draw_counter[7:4];
+						y = p1_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
 						colour = 3'b011;
 					end
 					else begin
 						draw_counter= 8'b00000000;
-						state = ERASE_PLAYER_2;
+						state = DRAW_PLAYER_1_GUN;
 					end
 				 end
-				 ERASE_PLAYER_2: begin
+				 DRAW_PLAYER_1_GUN: begin
+					if (draw_counter < 6'b10000) begin
+						x = p1_g_x + draw_counter[3:0];
+						y = p1_g_y + draw_counter[4];
+						draw_counter = draw_counter + 1'b1;
+						colour = 3'b011;
+					end
+					else begin
+						draw_counter= 8'b00000000;
+						state = ERASE_PLAYER_2_TANK;
+					end
+				 end
+				 ERASE_PLAYER_2_TANK: begin
 					if (draw_counter < 9'b10000000) begin
-						x = p2_x + draw_counter[7:4];
-						y = p2_y + draw_counter[3:0];
+						x = p2_t_x + draw_counter[7:4];
+						y = p2_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
 					end
 					else begin
 						draw_counter= 8'b00000000;
-						state = UPDATE_PLAYER_2;
+						state = ERASE_PLAYER_2_GUN;
 					end
 				 end
+				 ERASE_PLAYER_2_GUN: begin
+				 if (draw_counter < 6'b10000) begin
+					x = p2_g_x + draw_counter[3:0];
+					y = p2_g_y + draw_counter[4];
+					draw_counter = draw_counter + 1'b1;
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = UPDATE_PLAYER_2;
+				end
+			 end
 				 UPDATE_PLAYER_2: begin
-						if (~KEY[2] && p2_y < 8'd100) p2_y = p2_y + 1'b1;
-						if (~KEY[3] && p2_y > 8'd10) p2_y = p2_y - 1'b1;
-						state = DRAW_PLAYER_2;	
+						if (~KEY[2] && p2_t_y < 8'd100) begin
+							p2_t_y = p2_t_y + 1'b1;
+							p2_g_y = p2_g_y + 1'b1;
+						end
+						if (~KEY[3] && p2_t_y > 8'd10) begin
+							p2_t_y = p2_t_y - 1'b1;
+							p2_g_y = p2_g_y - 1'b1;
+						end
+						state = DRAW_PLAYER_2_TANK;
 				 end
-				 DRAW_PLAYER_2: begin
+				 DRAW_PLAYER_2_TANK: begin
 					if (draw_counter < 9'b10000000) begin
-						x = p2_x + draw_counter[7:4];
-						y = p2_y + draw_counter[3:0];
+						x = p2_t_x + draw_counter[7:4];
+						y = p2_t_y + draw_counter[3:0];
+						draw_counter = draw_counter + 1'b1;
+						colour = 3'b111;
+					end
+					else begin
+						draw_counter= 8'b00000000;
+						state = DRAW_PLAYER_2_GUN;
+					end
+				 end
+				 DRAW_PLAYER_2_GUN: begin
+					if (draw_counter < 6'b10000) begin
+						x = p2_g_x + draw_counter[3:0];
+						y = p2_g_y + draw_counter[4];
 						draw_counter = draw_counter + 1'b1;
 						colour = 3'b111;
 					end
@@ -220,4 +312,3 @@ reg frame;
     end
 	 assign clk = frame;
 endmodule
-
