@@ -126,10 +126,10 @@ module cowboy_gunner
 				 end
 				 INIT_PLAYER_1_GUN: begin
 				 if (draw_counter < 6'b10000) begin
-				 p1_g_x = 8'd134;
+				 p1_g_x = 8'd140;
 				 p1_g_y = 8'd53;
-					x = p1_g_x + draw_counter[3:0];
-					y = p1_g_y + draw_counter[4];
+					x = p1_g_x + draw_counter[2:0];
+					y = p1_g_y + draw_counter[4:3];
 					draw_counter = draw_counter + 1'b1;
 					colour = 3'b011;
 				end
@@ -140,12 +140,12 @@ module cowboy_gunner
 			 end
 				 INIT_PLAYER_2_TANK: begin
 					 if (draw_counter < 9'b10000000) begin
-					 p2_t_x = 8'd10;
+					 p2_t_x = 8'd8;
 					 p2_t_y = 8'd50;
 						x = p2_t_x + draw_counter[7:4];
 						y = p2_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
-						colour = 3'b111;
+						colour = 3'b001;
 					end
 					else begin
 						draw_counter= 8'b00000000;
@@ -154,12 +154,12 @@ module cowboy_gunner
 				 end
 				 INIT_PLAYER_2_GUN: begin
 				 if (draw_counter < 6'b10000) begin
-				 p2_g_x = 8'd30;
+				 p2_g_x = 8'd12;
 				 p2_g_y = 8'd53;
-					x = p2_g_x + draw_counter[3:0];
-					y = p2_g_y + draw_counter[4];
+					x = p2_g_x + draw_counter[2:0];
+					y = p2_g_y + draw_counter[4:3];
 					draw_counter = draw_counter + 1'b1;
-					colour = 3'b111;
+					colour = 3'b001;
 				end
 				else begin
 					draw_counter= 8'b00000000;
@@ -183,8 +183,8 @@ module cowboy_gunner
 				 end
 				 ERASE_PLAYER_1_GUN: begin
 				 if (draw_counter < 6'b10000) begin
-					x = p1_g_x + draw_counter[3:0];
-					y = p1_g_y + draw_counter[4];
+					x = p1_g_x + draw_counter[2:0];
+					y = p1_g_y + draw_counter[4:3];
 					draw_counter = draw_counter + 1'b1;
 				end
 				else begin
@@ -217,8 +217,8 @@ module cowboy_gunner
 				 end
 				 DRAW_PLAYER_1_GUN: begin
 					if (draw_counter < 6'b10000) begin
-						x = p1_g_x + draw_counter[3:0];
-						y = p1_g_y + draw_counter[4];
+						x = p1_g_x + draw_counter[2:0];
+						y = p1_g_y + draw_counter[4:3];
 						draw_counter = draw_counter + 1'b1;
 						colour = 3'b011;
 					end
@@ -240,8 +240,8 @@ module cowboy_gunner
 				 end
 				 ERASE_PLAYER_2_GUN: begin
 				 if (draw_counter < 6'b10000) begin
-					x = p2_g_x + draw_counter[3:0];
-					y = p2_g_y + draw_counter[4];
+					x = p2_g_x + draw_counter[2:0];
+					y = p2_g_y + draw_counter[4:3];
 					draw_counter = draw_counter + 1'b1;
 				end
 				else begin
@@ -265,7 +265,7 @@ module cowboy_gunner
 						x = p2_t_x + draw_counter[7:4];
 						y = p2_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
-						colour = 3'b111;
+						colour = 3'b001;
 					end
 					else begin
 						draw_counter= 8'b00000000;
@@ -274,10 +274,10 @@ module cowboy_gunner
 				 end
 				 DRAW_PLAYER_2_GUN: begin
 					if (draw_counter < 6'b10000) begin
-						x = p2_g_x + draw_counter[3:0];
-						y = p2_g_y + draw_counter[4];
+						x = p2_g_x + draw_counter[2:0];
+						y = p2_g_y + draw_counter[4:3];
 						draw_counter = draw_counter + 1'b1;
-						colour = 3'b111;
+						colour = 3'b001;
 					end
 					else begin
 						draw_counter= 8'b00000000;
