@@ -2,3 +2,7 @@
 *.qsf
 *.qsf.bak
 *.v.bak
+/project/output_files
+/project/incremental_db
+/project/simulation
+/project/db
