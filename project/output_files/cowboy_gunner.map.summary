@@ -1,0 +1,14 @@
+Analysis & Synthesis Status : Successful - Tue Mar 19 21:02:26 2019
+Quartus Prime Version : 16.0.0 Build 211 04/27/2016 SJ Lite Edition
+Revision Name : cowboy_gunner
+Top-level Entity Name : cowboy_gunner
+Family : Cyclone IV E
+Total logic elements : 346
+    Total combinational functions : 341
+    Dedicated logic registers : 112
+Total registers : 112
+Total pins : 60
+Total virtual pins : 0
+Total memory bits : 57,600
+Embedded Multiplier 9-bit elements : 0
+Total PLLs : 1
