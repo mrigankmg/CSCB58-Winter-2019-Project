@@ -5,7 +5,6 @@ module cowboy_gunner
 				CLOCK_50,						//	On Board 50 MHz
 		// Your inputs and outputs here
         KEY,
-		  LEDR,
 		  SW,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   						//	VGA Clock
@@ -21,7 +20,6 @@ module cowboy_gunner
 	input			CLOCK_50;				//	50 MHz
 	input   [3:0]   KEY;
 	input   [17:0]   SW;
-	output [17:0] LEDR;
 
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
@@ -67,8 +65,6 @@ module cowboy_gunner
 	 reg [17:0] draw_counter;
 	 wire frame;
 
-	 assign LEDR[5:0] = state;
-
 	 localparam  RESET_BLACK       = 6'b000000,
                 INIT_PLAYER_1_TANK     = 6'b000001,
 					 INIT_PLAYER_1_GUN     = 6'b000010,
@@ -88,7 +84,6 @@ module cowboy_gunner
 					 DEAD    		    = 6'b010000;
 
 	clock(.clock(CLOCK_50), .clk(frame));
-	 //assign LEDR[7] = ((b_y_direction) && (b_y > p_y - 8'd1) && (b_y < p_y + 8'd2) && (b_x >= p_x) && (b_x <= p_x + 8'd8));
 	 always@(posedge CLOCK_50)
     begin
 			border_init = 1'b0;
