@@ -20,6 +20,14 @@ module cowboy_gunner
 	input			CLOCK_50;				//	50 MHz
 	input   [3:0]   KEY;
 	input   [17:0]   SW;
+	input PS2_KBCLK;
+	input PS2_KBDAT;
+	output [17:0] LEDR;
+	wire [6:0] ASCII_value;
+  wire [7:0] kb_scan_code;
+	wire kb_sc_ready, kb_letter_case;
+	wire resetn;
+  	assign resetn = SW[4];
 
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
@@ -56,6 +64,26 @@ module cowboy_gunner
 		defparam VGA.MONOCHROME = "FALSE";
 		defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
 		defparam VGA.BACKGROUND_IMAGE = "black.mif";
+
+
+
+		keyboard kd
+			(
+					.clk(CLOCK_50),
+					.reset(~resetn),
+					.ps2d(PS2_KBDAT),
+					.ps2c(PS2_KBCLK),
+					.scan_code(kb_scan_code),
+					.scan_code_ready(kb_sc_ready),
+					.letter_case_out(kb_letter_case)
+			);
+
+	key2ascii SC2A
+			(
+					.ascii_code(ASCII_value),
+					.scan_code(kb_scan_code),
+					.letter_case(kb_letter_case)
+			);
 
 	 reg [5:0] state;
 	 reg border_init, player_1_init, player_2_init;
@@ -188,19 +216,19 @@ module cowboy_gunner
 				end
 			 end
 				 UPDATE_PLAYER_1: begin
-						if (~KEY[0] && p1_t_y < 8'd100) begin
+						if ((	ASCII_value == 8'h13) && p1_t_y < 8'd100) begin
 							p1_t_y = p1_t_y + 1'b1;
 							p1_g_y = p1_g_y + 1'b1;
 						end
-						if (~KEY[1] && p1_t_y > 8'd10) begin
+						if ((	ASCII_value == 8'h11) && p1_t_y > 8'd10) begin
 							p1_t_y = p1_t_y - 1'b1;
 							p1_g_y = p1_g_y - 1'b1;
 						end
-						if (SW[3] && p1_t_x > 8'd123) begin
+						if ((	ASCII_value == 8'h12) && p1_t_x > 8'd123) begin
 							p1_t_x = p1_t_x - 1'b1;
 							p1_g_x = p1_g_x - 1'b1;
 						end
-						if (SW[2] && p1_t_x < 8'd144) begin
+						if ((	ASCII_value == 8'h14) && p1_t_x < 8'd144) begin
 							p1_t_x = p1_t_x + 1'b1;
 							p1_g_x = p1_g_x + 1'b1;
 						end
@@ -253,19 +281,19 @@ module cowboy_gunner
 				end
 			 end
 				 UPDATE_PLAYER_2: begin
-						if (~KEY[2] && p2_t_y < 8'd100) begin
+						if ((ASCII_value  == 8'h73) && p2_t_y < 8'd100) begin
 							p2_t_y = p2_t_y + 1'b1;
 							p2_g_y = p2_g_y + 1'b1;
 						end
-						if (~KEY[3] && p2_t_y > 8'd10) begin
+						if ((ASCII_value ==8'h77) && p2_t_y > 8'd10) begin
 							p2_t_y = p2_t_y - 1'b1;
 							p2_g_y = p2_g_y - 1'b1;
 						end
-						if (SW[16] && p2_t_x < 8'd30) begin
+						if ((ASCII_value ==8'h64) && p2_t_x < 8'd30) begin
 							p2_t_x = p2_t_x + 1'b1;
 							p2_g_x = p2_g_x + 1'b1;
 						end
-						if (SW[17] && p2_t_x > 8'd8) begin
+						if ((ASCII_value ==8'h61) && p2_t_x > 8'd8) begin
 							p2_t_x = p2_t_x - 1'b1;
 							p2_g_x = p2_g_x - 1'b1;
 						end
