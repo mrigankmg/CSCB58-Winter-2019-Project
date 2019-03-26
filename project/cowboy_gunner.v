@@ -6,6 +6,9 @@ module cowboy_gunner
 		// Your inputs and outputs here
         KEY,
 		  SW,
+		  PS2_KBCLK,
+		  PS2_KBDAT,
+		  LEDR,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   						//	VGA Clock
 		VGA_HS,							//	VGA H_SYNC
@@ -24,7 +27,7 @@ module cowboy_gunner
 	input PS2_KBDAT;
 	output [17:0] LEDR;
 	wire [6:0] ASCII_value;
-  wire [7:0] kb_scan_code;
+   wire [7:0] kb_scan_code;
 	wire kb_sc_ready, kb_letter_case;
 	wire resetn;
   	assign resetn = SW[4];
@@ -51,7 +54,8 @@ module cowboy_gunner
 			.x(x),
 			.y(y),
 			.plot(1'b1),
-			/* Signals for the DAC to drive the monitor. */
+			/* Signals for the DAC to drive module cowboy_gunner
+the monitor. */
 			.VGA_R(VGA_R),
 			.VGA_G(VGA_G),
 			.VGA_B(VGA_B),
@@ -64,8 +68,6 @@ module cowboy_gunner
 		defparam VGA.MONOCHROME = "FALSE";
 		defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
 		defparam VGA.BACKGROUND_IMAGE = "black.mif";
-
-
 
 		keyboard kd
 			(
@@ -86,30 +88,36 @@ module cowboy_gunner
 			);
 
 	 reg [5:0] state;
-	 reg border_init, player_1_init, player_2_init;
+	 reg border_init, player_1_init, player_2_init, p1_fired, p2_fired;
 	 reg [7:0] x, y;
-	 reg [7:0] p1_t_x, p1_t_y, p1_g_x, p1_g_y, p2_t_x, p2_t_y, p2_g_x, p2_g_y;
+	 reg [7:0] p1_t_x, p1_t_y, p1_g_x, p1_g_y, p2_t_x, p2_t_y, p2_g_x, p2_g_y, pb1_x, pb1_y, pb2_x, pb2_y;
 	 reg [2:0] colour;
 	 reg [17:0] draw_counter;
 	 wire frame;
 
-	 localparam  RESET_BLACK       = 6'b000000,
-                INIT_PLAYER_1_TANK     = 6'b000001,
-					 INIT_PLAYER_1_GUN     = 6'b000010,
-					 INIT_PLAYER_2_TANK     = 6'b000011,
-		 		 	 INIT_PLAYER_2_GUN     = 6'b000100,
-                IDLE              = 6'b000101,
-					 ERASE_PLAYER_1_TANK	 = 6'b000110,
-					 ERASE_PLAYER_1_GUN	 = 6'b000111,
-                UPDATE_PLAYER_1   = 6'b001000,
-					 DRAW_PLAYER_1_TANK	    = 6'b001001,
-					 DRAW_PLAYER_1_GUN	    = 6'b001010,
-					 ERASE_PLAYER_2_TANK	 = 6'b001011,
-					 ERASE_PLAYER_2_GUN	 = 6'b001100,
-                UPDATE_PLAYER_2   = 6'b001101,
-					 DRAW_PLAYER_2_TANK	    = 6'b001110,
-					 DRAW_PLAYER_2_GUN	    = 6'b001111,
-					 DEAD    		    = 6'b010000;
+	 localparam  RESET_BLACK       = 7'b0000000,
+                INIT_PLAYER_1_TANK     =7'b0000001,
+					 INIT_PLAYER_1_GUN     = 7'b0000010,
+					 INIT_PLAYER_1_BULLET     = 7'b0000011,
+					 INIT_PLAYER_2_TANK     = 7'b0000100,
+		 		 	 INIT_PLAYER_2_GUN     = 7'b0000101,
+					 INIT_PLAYER_2_BULLET     = 7'b0000110,
+                IDLE              = 7'b0000111,
+					 ERASE_PLAYER_1_TANK	 = 7'b0001000,
+					 ERASE_PLAYER_1_GUN	 = 7'b0001001,
+					 ERASE_PLAYER_1_BULLET	 = 7'b0001010,
+                UPDATE_PLAYER_1   = 7'b0001011,
+					 DRAW_PLAYER_1_TANK	    = 7'b0001100,
+					 DRAW_PLAYER_1_GUN	    = 7'b0001101,
+					 DRAW_PLAYER_1_BULLET	    = 7'b0001110,
+					 ERASE_PLAYER_2_TANK	 = 7'b0001111,
+					 ERASE_PLAYER_2_GUN	= 7'b0010000,
+					 ERASE_PLAYER_2_BULLET	 = 7'b0010001,
+                UPDATE_PLAYER_2   = 7'b0010010,
+					 DRAW_PLAYER_2_TANK	 = 7'b0010011,
+					 DRAW_PLAYER_2_GUN	 = 7'b0010100,
+					 DRAW_PLAYER_2_BULLET	    = 7'b0010101,
+					 DEAD    		    = 7'b0010110;
 
 	clock(.clock(CLOCK_50), .clk(frame));
 	 always@(posedge CLOCK_50)
@@ -117,12 +125,16 @@ module cowboy_gunner
 			border_init = 1'b0;
 			player_1_init = 1'b0;
 			player_2_init = 1'b0;
+//			p1_fired = 1'b0;
+//			p2_fired = 1'b0;
 			colour = 3'b000;
 			x = 8'b00000000;
 			y = 8'b00000000;
 			if (SW[0]) state = RESET_BLACK;
         case (state)
 		  RESET_BLACK: begin
+		  	p1_fired = 1'b0;
+			p2_fired = 1'b0;
 			if (draw_counter < 17'b10000000000000000) begin
 				x = draw_counter[7:0];
 				y = draw_counter[16:8];
@@ -134,9 +146,9 @@ module cowboy_gunner
 			end
 		  end
     			 INIT_PLAYER_1_TANK: begin
-					 if (draw_counter < 9'b10000000) begin
-					 p1_t_x = 8'd144;
-					 p1_t_y = 8'd50;
+					if (draw_counter < 9'b10000000) begin
+						p1_t_x = 8'd144;
+						p1_t_y = 8'd50;
 						x = p1_t_x + draw_counter[7:4];
 						y = p1_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
@@ -148,11 +160,25 @@ module cowboy_gunner
 					end
 				 end
 				 INIT_PLAYER_1_GUN: begin
+				 if (draw_counter < 5'b1000) begin
+					p1_g_x = 8'd140;
+					p1_g_y = 8'd53;
+					x = p1_g_x + draw_counter[1:0];
+					y = p1_g_y + draw_counter[3:2];
+					draw_counter = draw_counter + 1'b1;
+					colour = 3'b011;
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = INIT_PLAYER_1_BULLET;
+				end
+			 end
+			 INIT_PLAYER_1_BULLET: begin
 				 if (draw_counter < 6'b10000) begin
-				 p1_g_x = 8'd140;
-				 p1_g_y = 8'd53;
-					x = p1_g_x + draw_counter[2:0];
-					y = p1_g_y + draw_counter[4:3];
+					pb1_x = 8'd140;
+					pb1_y = 8'd53;
+					x = pb1_x + draw_counter[2:0];
+					y = pb1_y + draw_counter[4:3];
 					draw_counter = draw_counter + 1'b1;
 					colour = 3'b011;
 				end
@@ -176,13 +202,27 @@ module cowboy_gunner
 					end
 				 end
 				 INIT_PLAYER_2_GUN: begin
-				 if (draw_counter < 6'b10000) begin
-				 p2_g_x = 8'd12;
-				 p2_g_y = 8'd53;
+				if (draw_counter < 6'b10000) begin
+					p2_g_x = 8'd12;
+					p2_g_y = 8'd53;
 					x = p2_g_x + draw_counter[2:0];
 					y = p2_g_y + draw_counter[4:3];
 					draw_counter = draw_counter + 1'b1;
 					colour = 3'b001;
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = INIT_PLAYER_2_BULLET;
+				end
+			 end
+			 INIT_PLAYER_2_BULLET: begin
+				if (draw_counter < 5'b1000) begin
+					pb2_x = 8'd15;
+					pb2_y = 8'd53;
+					x = pb2_x + draw_counter[1:0];
+					y = pb2_y + draw_counter[3:2];
+					draw_counter = draw_counter + 1'b1;
+					colour = 3'b011;
 				end
 				else begin
 					draw_counter= 8'b00000000;
@@ -205,9 +245,20 @@ module cowboy_gunner
 					end
 				 end
 				 ERASE_PLAYER_1_GUN: begin
-				 if (draw_counter < 6'b10000) begin
+				if (draw_counter < 6'b10000) begin
 					x = p1_g_x + draw_counter[2:0];
 					y = p1_g_y + draw_counter[4:3];
+					draw_counter = draw_counter + 1'b1;
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = ERASE_PLAYER_1_BULLET;
+				end
+			 end
+			 ERASE_PLAYER_1_BULLET: begin
+				if (draw_counter < 5'b1000) begin
+					x = pb1_x + draw_counter[1:0];
+					y = pb1_y + draw_counter[3:2];
 					draw_counter = draw_counter + 1'b1;
 				end
 				else begin
@@ -216,21 +267,44 @@ module cowboy_gunner
 				end
 			 end
 				 UPDATE_PLAYER_1: begin
-						if ((	ASCII_value == 8'h13) && p1_t_y < 8'd100) begin
+						if (ASCII_value == 8'h13 && p1_t_y < 8'd100) begin
 							p1_t_y = p1_t_y + 1'b1;
 							p1_g_y = p1_g_y + 1'b1;
+							if(p1_fired == 1'b0) begin
+								pb1_y=pb1_y + 1'b1;
+							end
 						end
-						if ((	ASCII_value == 8'h11) && p1_t_y > 8'd10) begin
+						if (ASCII_value == 8'h11 && p1_t_y > 8'd10) begin
 							p1_t_y = p1_t_y - 1'b1;
 							p1_g_y = p1_g_y - 1'b1;
+							if(p1_fired == 1'b0) begin
+								pb1_y=pb1_y - 1'b1;
+							end
 						end
-						if ((	ASCII_value == 8'h12) && p1_t_x > 8'd123) begin
+						if (ASCII_value == 8'h12 && p1_t_x > 8'd123) begin
 							p1_t_x = p1_t_x - 1'b1;
 							p1_g_x = p1_g_x - 1'b1;
+							if(p1_fired == 1'b0) begin
+								pb1_x=pb1_x - 1'b1;
+							end
 						end
-						if ((	ASCII_value == 8'h14) && p1_t_x < 8'd144) begin
+						if (ASCII_value == 8'h14 && p1_t_x < 8'd144) begin
 							p1_t_x = p1_t_x + 1'b1;
 							p1_g_x = p1_g_x + 1'b1;
+							if(p1_fired == 1'b0) begin
+								pb1_x=pb1_x + 1'b1;
+							end
+						end
+						if (SW[15] && p1_fired == 1'b0) begin
+							p1_fired = 1'b1;
+						end
+						if (p1_fired == 1'b1 && pb1_x > 8'd0) begin
+							pb1_x = pb1_x - 1'b1;
+						end
+						else if (p1_fired == 1'b1 && pb1_x == 8'd0) begin
+							pb1_x = p1_g_x;
+							pb1_y = p1_g_y;
+							p1_fired = 1'b0;
 						end
 						state = DRAW_PLAYER_1_TANK;
 				 end
@@ -255,9 +329,21 @@ module cowboy_gunner
 					end
 					else begin
 						draw_counter= 8'b00000000;
-						state = ERASE_PLAYER_2_TANK;
+						state = DRAW_PLAYER_1_BULLET;
 					end
 				 end
+				 DRAW_PLAYER_1_BULLET: begin
+				 if (draw_counter < 5'b1000) begin
+					x = pb1_x + draw_counter[1:0];
+					y = pb1_y + draw_counter[3:2];
+					draw_counter = draw_counter + 1'b1;
+					colour = 3'b011;
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = ERASE_PLAYER_2_TANK;
+				end
+			 end
 				 ERASE_PLAYER_2_TANK: begin
 					if (draw_counter < 9'b10000000) begin
 						x = p2_t_x + draw_counter[7:4];
@@ -277,25 +363,59 @@ module cowboy_gunner
 				end
 				else begin
 					draw_counter= 8'b00000000;
+					state = ERASE_PLAYER_2_BULLET;
+				end
+			 end
+			 ERASE_PLAYER_2_BULLET: begin
+				 if (draw_counter < 5'b1000) begin
+					x = pb2_x + draw_counter[1:0];
+					y = pb2_y + draw_counter[3:2];
+					draw_counter = draw_counter + 1'b1;
+				end
+				else begin
+					draw_counter= 8'b00000000;
 					state = UPDATE_PLAYER_2;
 				end
 			 end
 				 UPDATE_PLAYER_2: begin
-						if ((ASCII_value  == 8'h73) && p2_t_y < 8'd100) begin
+						if (ASCII_value  == 8'h73 && p2_t_y < 8'd100) begin
 							p2_t_y = p2_t_y + 1'b1;
 							p2_g_y = p2_g_y + 1'b1;
+							if(p2_fired == 1'b0) begin
+								pb2_y=pb2_y + 1'b1;
+							end
 						end
-						if ((ASCII_value ==8'h77) && p2_t_y > 8'd10) begin
+						if (ASCII_value ==8'h77 && p2_t_y > 8'd10) begin
 							p2_t_y = p2_t_y - 1'b1;
 							p2_g_y = p2_g_y - 1'b1;
+							if(p2_fired == 1'b0) begin
+								pb2_y=pb2_y - 1'b1;
+							end
 						end
-						if ((ASCII_value ==8'h64) && p2_t_x < 8'd30) begin
+						if (ASCII_value ==8'h64 && p2_t_x < 8'd30) begin
 							p2_t_x = p2_t_x + 1'b1;
 							p2_g_x = p2_g_x + 1'b1;
+							if(p2_fired == 1'b0) begin
+								pb2_x=pb2_x + 1'b1;
+							end
 						end
-						if ((ASCII_value ==8'h61) && p2_t_x > 8'd8) begin
+						if (ASCII_value==8'h61 && p2_t_x > 8'd8) begin
 							p2_t_x = p2_t_x - 1'b1;
 							p2_g_x = p2_g_x - 1'b1;
+							if(p2_fired == 1'b0) begin
+								pb2_x=pb2_x - 1'b1;
+							end
+						end
+						if (SW[17] && p2_fired == 1'b0) begin
+							p2_fired = 1'b1;
+						end
+						if (p2_fired == 1'b1 && pb2_x < 8'd150) begin
+							pb2_x=pb2_x + 1'b1;
+						end
+						else if (p2_fired == 1'b1 && pb2_x == 8'd150) begin
+							pb2_x = p2_g_x + 2'd3;
+							pb2_y = p2_g_y;
+							p2_fired = 1'b0;
 						end
 						state = DRAW_PLAYER_2_TANK;
 				 end
@@ -320,20 +440,39 @@ module cowboy_gunner
 					end
 					else begin
 						draw_counter= 8'b00000000;
-						state = IDLE;
+						state = DRAW_PLAYER_2_BULLET;
 					end
 				 end
+				 DRAW_PLAYER_2_BULLET: begin
+				 if (draw_counter < 5'b1000) begin
+					x = pb2_x + draw_counter[1:0];
+					y = pb2_y + draw_counter[3:2];
+					draw_counter = draw_counter + 1'b1;
+					colour = 3'b001;
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = IDLE;
+				end
+			 end
 				 DEAD: begin
 					if (draw_counter < 17'b10000000000000000) begin
 						x = draw_counter[7:0];
 						y = draw_counter[16:8];
-						draw_counter = draw_counter + 1'b1;
+						draw_counter = draw_counter + 1'b1
+;
 						colour = 3'b100;
 					end
 				end
          endcase
     end
 endmodule
+
+module bullet(input clock, input fire);
+
+endmodule
+
+
 
 module clock(input clock, output clk);
 reg [19:0] frame_counter;
@@ -349,5 +488,5 @@ reg frame;
 			frame = 1'b0;
 		  end
     end
-	 assign clk = frame;
+ 	 assign clk = frame;
 endmodule
