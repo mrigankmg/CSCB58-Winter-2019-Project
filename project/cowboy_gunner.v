@@ -92,6 +92,8 @@ the monitor. */
 	 reg [7:0] x, y;
 	 reg [7:0] p1_t_x, p1_t_y, p1_g_x, p1_g_y, p2_t_x, p2_t_y, p2_g_x, p2_g_y, pb1_x, pb1_y, pb2_x, pb2_y;
 	 reg [2:0] colour;
+	 reg score_a ;
+	 reg score_b ;
 	 reg [17:0] draw_counter;
 	 wire frame;
 
@@ -135,6 +137,8 @@ the monitor. */
 		  RESET_BLACK: begin
 		  	p1_fired = 1'b0;
 			p2_fired = 1'b0;
+			score_a = 2'b00;
+			score_b = 2'b00;
 			if (draw_counter < 17'b10000000000000000) begin
 				x = draw_counter[7:0];
 				y = draw_counter[16:8];
@@ -306,7 +310,19 @@ the monitor. */
 							pb1_y = p1_g_y;
 							p1_fired = 1'b0;
 						end
-						state = DRAW_PLAYER_1_TANK;
+						if(p1_fired == 1'b1 && pb1_x > p2_t_x + 6'b100000) begin
+							if ((pb1_y - 2'b10) > p2_t_y && (pb1_y < p2_t_y + 6'b10000) )begin
+								score_a <= score_a + 2'b01;
+								p1_fired = 1'b0;
+								//pb1_x = 8'd00;
+								//pb1_y = 8'd00;
+								draw_counter= 8'b00000000;
+								if(score_a == 2'b11) state = RESET_BLACK;
+								else state = INIT_PLAYER_2_TANK;
+							end
+							else state = DRAW_PLAYER_1_TANK;
+						end
+						else state = DRAW_PLAYER_1_TANK;
 				 end
 				 DRAW_PLAYER_1_TANK: begin
 					if (draw_counter < 9'b10000000) begin
@@ -417,7 +433,21 @@ the monitor. */
 							pb2_y = p2_g_y;
 							p2_fired = 1'b0;
 						end
-						state = DRAW_PLAYER_2_TANK;
+						if(p2_fired == 1'b1 && pb2_x + 2'b11 > p1_t_x ) begin
+							if ((pb2_y - 2'b10) > p1_t_y && (pb2_y < p1_t_y + 6'b10000) ) begin
+								score_b <= score_b + 2'b01;
+								p2_fired = 1'b0;
+								//pb2_x = 8'd00;
+								//pb2_y = 8'd00;
+								draw_counter= 8'b00000000;
+								if(score_b == 2'b11) state = RESET_BLACK;
+								else state = INIT_PLAYER_1_TANK;//+ 
+							end
+							else state = DRAW_PLAYER_2_TANK;
+						end
+						else begin
+							state = DRAW_PLAYER_2_TANK;
+						end
 				 end
 				 DRAW_PLAYER_2_TANK: begin
 					if (draw_counter < 9'b10000000) begin
