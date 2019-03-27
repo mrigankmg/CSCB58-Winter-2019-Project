@@ -17,7 +17,9 @@ module cowboy_gunner
 		VGA_SYNC_N,						//	VGA SYNC
 		VGA_R,   						//	VGA Red[9:0]
 		VGA_G,	 						//	VGA Green[9:0]
-		VGA_B   						//	VGA Blue[9:0]
+		VGA_B,
+		HEX0,
+		HEX1,//	VGA Blue[9:0]
 	);
 
 	input			CLOCK_50;				//	50 MHz
@@ -42,7 +44,18 @@ module cowboy_gunner
 	output	[9:0]	VGA_R;   				//	VGA Red[9:0]
 	output	[9:0]	VGA_G;	 				//	VGA Green[9:0]
 	output	[9:0]	VGA_B;   				//	VGA Blue[9:0]
-
+	output 	[6:0] HEX0, HEX1;
+	
+	
+	hex_decoder H0(
+        .hex_digit(score_a), 
+        .segments(HEX0)
+        );
+        
+    hex_decoder H1(
+        .hex_digit(score_b), 
+        .segments(HEX1)
+        );
 
 	// Create an Instance of a VGA controller - there can be only one!
 	// Define the number of colours as well as the initial background
@@ -137,8 +150,8 @@ the monitor. */
 		  RESET_BLACK: begin
 		  	p1_fired = 1'b0;
 			p2_fired = 1'b0;
-			score_a = 2'b00;
-			score_b = 2'b00;
+			score_a = 4'b00;
+			score_b = 4'b00;
 			if (draw_counter < 17'b10000000000000000) begin
 				x = draw_counter[7:0];
 				y = draw_counter[16:8];
@@ -310,15 +323,15 @@ the monitor. */
 							pb1_y = p1_g_y;
 							p1_fired = 1'b0;
 						end
-						if(p1_fired == 1'b1 && pb1_x > p2_t_x + 6'b100000) begin
+						if(p1_fired == 1'b1 && pb1_x < p2_t_x) begin
 							if ((pb1_y - 2'b10) > p2_t_y && (pb1_y < p2_t_y + 6'b10000) )begin
-								score_a <= score_a + 2'b01;
+								score_a <= score_a + 1'b1;
 								p1_fired = 1'b0;
-								//pb1_x = 8'd00;
-								//pb1_y = 8'd00;
+								pb1_x = p1_t_x;
+								pb1_y = p1_g_y;
 								draw_counter= 8'b00000000;
-								if(score_a == 2'b11) state = RESET_BLACK;
-								else state = INIT_PLAYER_1_TANK;
+								if(score_a == 4'b0111) state = RESET_BLACK;
+								else state = ERASE_PLAYER_1_TANK;
 							end
 							else state = DRAW_PLAYER_1_TANK;
 						end
@@ -433,15 +446,15 @@ the monitor. */
 							pb2_y = p2_g_y;
 							p2_fired = 1'b0;
 						end
-						if(p2_fired == 1'b1 && pb2_x + 2'b11 > p1_t_x ) begin
+						if(p2_fired == 1'b1 && pb2_x + 3'b100 > p1_t_x ) begin
 							if ((pb2_y - 2'b10) > p1_t_y && (pb2_y < p1_t_y + 6'b10000) ) begin
-								score_b <= score_b + 2'b01;
+								score_b <= score_b + 1'b1;
 								p2_fired = 1'b0;
-								//pb2_x = 8'd00;
-								//pb2_y = 8'd00;
+								pb2_x = p2_t_x;
+								pb2_y = p2_g_y;
 								draw_counter= 8'b00000000;
-								if(score_b == 2'b11) state = RESET_BLACK;
-								else state = INIT_PLAYER_2_TANK;//+ 
+								if(score_b == 4'b0011) state = RESET_BLACK;
+								else state = ERASE_PLAYER_1_TANK;//+ 
 							end
 							else state = DRAW_PLAYER_2_TANK;
 						end
@@ -520,4 +533,30 @@ reg frame;
 		  end
     end
  	 assign clk = frame;
+endmodule
+
+module hex_decoder(hex_digit, segments);
+    input [3:0] hex_digit;
+    output reg [6:0] segments;
+   
+    always @(*)
+        case (hex_digit)
+            4'h0: segments = 7'b100_0000;
+            4'h1: segments = 7'b111_1001;
+            4'h2: segments = 7'b010_0100;
+            4'h3: segments = 7'b011_0000;
+            4'h4: segments = 7'b001_1001;
+            4'h5: segments = 7'b001_0010;
+            4'h6: segments = 7'b000_0010;
+            4'h7: segments = 7'b111_1000;
+            4'h8: segments = 7'b000_0000;
+            4'h9: segments = 7'b001_1000;
+            4'hA: segments = 7'b000_1000;
+            4'hB: segments = 7'b000_0011;
+            4'hC: segments = 7'b100_0110;
+            4'hD: segments = 7'b010_0001;
+            4'hE: segments = 7'b000_0110;
+            4'hF: segments = 7'b000_1110;   
+            default: segments = 7'h7f;
+        endcase
 endmodule
