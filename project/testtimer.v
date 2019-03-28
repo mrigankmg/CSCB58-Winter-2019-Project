@@ -1,9 +1,8 @@
 `timescale 1ns / 1ps
 
-module testtimer( CLOCK_50, HEX0, HEX1, HEX2, KEY, SW, done);
-	input CLOCK_50;
-	input [3:0] KEY;
-	input [17:0] SW;
+module testtimer( clk, HEX0, HEX1, HEX2, SW, done);
+	input clk;
+	input [9:6] SW;
 	output [6:0] HEX0, HEX1, HEX2;
 	output reg done;
 	
@@ -18,11 +17,13 @@ module testtimer( CLOCK_50, HEX0, HEX1, HEX2, KEY, SW, done);
 
 	reg [25:0] new_clk = 0;
 
-	always @(posedge CLOCK_50) begin : counter
-		if(SW[17] == 1'b0) begin
-			mins <= {1'b0, SW[2:0]};
+	always @(posedge clk) begin : counter
+		if(SW[9] == 1'b0) begin
+			mins <= {1'b0, SW[8:6]};
+			ones <= 4'b0000;
+			tens <= 4'b0000;
 		end
-		else if(SW[17] == 1'b1) begin
+		else if(SW[9] == 1'b1) begin
 			if(new_clk == 26'd50000000) begin
 				if(tens > 4'b0000 && ones == 4'b0000) begin
 					tens <= tens - 1'b1;
@@ -47,11 +48,6 @@ module testtimer( CLOCK_50, HEX0, HEX1, HEX2, KEY, SW, done);
 			end
 			else begin
 				new_clk <= new_clk + 1'b1;
-			end
-			if(~KEY[0]) begin
-				ones <= 4'b0000;
-				tens <= 4'b0000;
-				mins <= {1'b0, SW[2:0]};
 			end
 		end
 	end
