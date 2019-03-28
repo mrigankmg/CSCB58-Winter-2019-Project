@@ -7,6 +7,11 @@ module cowboy_gunner
 		  PS2_KBCLK,
 		  PS2_KBDAT,
 		  LEDR,
+		  HEX0,
+		  HEX1,
+		  HEX2,
+		  HEX4,
+		  HEX6,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   						//	VGA Clock
 		VGA_HS,							//	VGA H_SYNC
@@ -16,8 +21,6 @@ module cowboy_gunner
 		VGA_R,   						//	VGA Red[9:0]
 		VGA_G,	 						//	VGA Green[9:0]
 		VGA_B,
-		HEX0,
-		HEX1,//	VGA Blue[9:0]
 	);
 
 	input			CLOCK_50;				//	50 MHz
@@ -30,8 +33,7 @@ module cowboy_gunner
    wire [7:0] kb_scan_code;
 	wire kb_sc_ready, kb_letter_case;
 	wire resetn;
-  	assign resetn = SW[4];
-
+  	assign resetn = SW[9];
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
 	output			VGA_CLK;   				//	VGA Clock
@@ -42,17 +44,17 @@ module cowboy_gunner
 	output	[9:0]	VGA_R;   				//	VGA Red[9:0]
 	output	[9:0]	VGA_G;	 				//	VGA Green[9:0]
 	output	[9:0]	VGA_B;   				//	VGA Blue[9:0]
-	output 	[6:0] HEX0, HEX1;
+	output 	[6:0] HEX4, HEX6, HEX0, HEX1, HEX2;
 	
 	
 	hex_decoder H0(
         .hex_digit(score_a), 
-        .segments(HEX0)
+        .segments(HEX6)
         );
         
     hex_decoder H1(
         .hex_digit(score_b), 
-        .segments(HEX1)
+        .segments(HEX4)
         );
 
 	// Create an Instance of a VGA controller - there can be only one!
@@ -97,6 +99,8 @@ the monitor. */
 					.scan_code(kb_scan_code),
 					.letter_case(kb_letter_case)
 			);
+		reg done;
+	testtimer timer( .clk(CLOCK_50), .HEX0(HEX0), .HEX1(HEX1), .HEX2(HEX2), .SW(SW[9:6]), .done(done));
 
 	 reg [5:0] state;
 	 reg border_init, player_1_init, player_2_init, p1_fired, p2_fired;
@@ -130,11 +134,11 @@ the monitor. */
 					 DRAW_PLAYER_2_TANK	 = 7'b0010011,
 					 DRAW_PLAYER_2_GUN	 = 7'b0010100,
 					 DRAW_PLAYER_2_BULLET	    = 7'b0010101,
-					 DEAD    		    = 7'b0010110;
+					 DEAD    		    = 7'b0010110,
 					 DRAW_PLAYER_1_OUT_TANK	    = 7'b0010111,
 					 DRAW_PLAYER_1_OUT_GUN	    = 7'b0011000,
 					 DRAW_PLAYER_2_OUT_TANK	    = 7'b0011001,
-					 DRAW_PLAYER_2_OUT_GUN	    = 7'b0011010,
+					 DRAW_PLAYER_2_OUT_GUN	    = 7'b0011010;
 					
 					
 	clock(.clock(CLOCK_50), .clk(frame));
@@ -143,6 +147,8 @@ the monitor. */
 			border_init = 1'b0;
 			player_1_init = 1'b0;
 			player_2_init = 1'b0;
+						score_a = 4'b0100;
+			score_b = 4'b0001;
 //			p1_fired = 1'b0;
 //			p2_fired = 1'b0;
 			colour = 3'b000;
@@ -153,8 +159,7 @@ the monitor. */
 		  RESET_BLACK: begin
 		  	p1_fired = 1'b0;
 			p2_fired = 1'b0;
-			score_a = 4'b0000;
-			score_b = 4'b0000;
+
 			if (draw_counter < 17'b10000000000000000) begin
 				x = draw_counter[7:0];
 				y = draw_counter[16:8];
@@ -250,9 +255,9 @@ the monitor. */
 				end
 			 end
 				 IDLE: begin
-				 if (frame)
-					state = ERASE_PLAYER_1_TANK;
-				 end
+					if (frame)
+						state = ERASE_PLAYER_1_TANK;
+					end
 				 ERASE_PLAYER_1_TANK: begin
 					if (draw_counter < 9'b10000000) begin
 						x = p1_t_x + draw_counter[7:4];
@@ -315,7 +320,7 @@ the monitor. */
 								pb1_x=pb1_x + 1'b1;
 							end
 						end
-						if (SW[15] && p1_fired == 1'b0) begin
+						if (SW[4] && p1_fired == 1'b0) begin
 							p1_fired = 1'b1;
 						end
 						if (p1_fired == 1'b1 && pb1_x > 8'd0) begin
@@ -328,13 +333,12 @@ the monitor. */
 						end
 						if(p1_fired == 1'b1 && pb1_x < p2_t_x) begin
 							if ((pb1_y - 2'b10) > p2_t_y && (pb1_y < p2_t_y + 6'b10000) )begin
-								score_a = score_a + 4'b0001;
-								p1_fired = 1'b0;
+								score_a <= 1'b1;
+								p1_fired <= 1'b1;
 								pb1_x = p1_t_x;
 								pb1_y = p1_g_y;
 								draw_counter= 8'b00000000;
-								if(score_a == 4'b0111) state = RESET_BLACK;
-								else state = DRAW_PLAYER_2_OUT_TANK;
+								state = DRAW_PLAYER_2_OUT_TANK;
 							end
 							else state = DRAW_PLAYER_1_TANK;
 						end
@@ -345,7 +349,7 @@ the monitor. */
 						x = p1_t_x + draw_counter[7:4];
 						y = p1_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
-						colour = 3'b101;
+						colour = 3'b110;
 					end
 					else begin
 						draw_counter= 8'b00000000;
@@ -357,7 +361,7 @@ the monitor. */
 						x = p1_g_x + draw_counter[2:0];
 						y = p1_g_y + draw_counter[4:3];
 						draw_counter = draw_counter + 1'b1;
-						colour = 3'b101;
+						colour = 3'b110;
 					end
 					else begin
 						draw_counter= 8'b00000000;
@@ -475,13 +479,12 @@ the monitor. */
 						end
 						if(p2_fired == 1'b1 && pb2_x + 3'b100 > p1_t_x ) begin
 							if ((pb2_y - 2'b10) > p1_t_y && (pb2_y < p1_t_y + 6'b10000) ) begin
-								score_b = score_b + 4'b0001;
-								p2_fired = 1'b0;
+								score_b <= score_b + 1'b1;
+								p2_fired <= 1'b1;
 								pb2_x = p2_t_x;
 								pb2_y = p2_g_y;
 								draw_counter= 8'b00000000;
-								if(score_b == 4'b0111) state = RESET_BLACK;
-								else state = DRAW_PLAYER_1_OUT_TANK;//+ 
+							 state = DRAW_PLAYER_1_OUT_TANK;//+ 
 							end
 							else state = DRAW_PLAYER_2_TANK;
 						end
@@ -501,7 +504,7 @@ the monitor. */
 						state = DRAW_PLAYER_2_GUN;
 					end
 				 end
-				 DRAW_PLAYER_2__OUT_GUN: begin
+				 DRAW_PLAYER_2_OUT_GUN: begin
 					if (draw_counter < 6'b10000) begin
 						x = p2_g_x + draw_counter[2:0];
 						y = p2_g_y + draw_counter[4:3];
