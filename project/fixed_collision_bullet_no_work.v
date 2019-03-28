@@ -107,8 +107,8 @@ the monitor. */
 	 reg [7:0] x, y;
 	 reg [7:0] p1_t_x, p1_t_y, p1_g_x, p1_g_y, p2_t_x, p2_t_y, p2_g_x, p2_g_y, pb1_x, pb1_y, pb2_x, pb2_y;
 	 reg [2:0] colour;
-	 reg score_a ;
-	 reg score_b ;
+	 reg [3:0] score_a ;
+	 reg  [3:0]score_b ;
 	 reg [17:0] draw_counter;
 	 wire frame;
 
@@ -147,8 +147,8 @@ the monitor. */
 			border_init = 1'b0;
 			player_1_init = 1'b0;
 			player_2_init = 1'b0;
-						score_a = 4'b0100;
-			score_b = 4'b0001;
+			score_a = 4'b0000;
+			score_b = 4'b0000;
 //			p1_fired = 1'b0;
 //			p2_fired = 1'b0;
 			colour = 3'b000;
@@ -345,7 +345,7 @@ the monitor. */
 						else state = DRAW_PLAYER_1_TANK;
 				 end
 				 DRAW_PLAYER_1_OUT_TANK: begin
-					if (draw_counter < 9'b10000000) begin
+					 if (draw_counter < 8'b10000000) begin
 						x = p1_t_x + draw_counter[7:4];
 						y = p1_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
@@ -493,7 +493,7 @@ the monitor. */
 						end
 				 end
 				 DRAW_PLAYER_2_OUT_TANK: begin
-					if (draw_counter < 9'b10000000) begin
+					 if (draw_counter < 8'b10000000) begin
 						x = p2_t_x + draw_counter[7:4];
 						y = p2_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
