@@ -1,5 +1,3 @@
-// Part 2 skeleton
-
 module cowboy_gunner
 	(
 				CLOCK_50,						//	On Board 50 MHz
@@ -133,7 +131,12 @@ the monitor. */
 					 DRAW_PLAYER_2_GUN	 = 7'b0010100,
 					 DRAW_PLAYER_2_BULLET	    = 7'b0010101,
 					 DEAD    		    = 7'b0010110;
-
+					 DRAW_PLAYER_1_OUT_TANK	    = 7'b0010111,
+					 DRAW_PLAYER_1_OUT_GUN	    = 7'b0011000,
+					 DRAW_PLAYER_2_OUT_TANK	    = 7'b0011001,
+					 DRAW_PLAYER_2_OUT_GUN	    = 7'b0011010,
+					
+					
 	clock(.clock(CLOCK_50), .clk(frame));
 	 always@(posedge CLOCK_50)
     begin
@@ -150,8 +153,8 @@ the monitor. */
 		  RESET_BLACK: begin
 		  	p1_fired = 1'b0;
 			p2_fired = 1'b0;
-			score_a = 4'b00;
-			score_b = 4'b00;
+			score_a = 4'b0000;
+			score_b = 4'b0000;
 			if (draw_counter < 17'b10000000000000000) begin
 				x = draw_counter[7:0];
 				y = draw_counter[16:8];
@@ -325,17 +328,41 @@ the monitor. */
 						end
 						if(p1_fired == 1'b1 && pb1_x < p2_t_x) begin
 							if ((pb1_y - 2'b10) > p2_t_y && (pb1_y < p2_t_y + 6'b10000) )begin
-								score_a <= score_a + 1'b1;
+								score_a = score_a + 4'b0001;
 								p1_fired = 1'b0;
 								pb1_x = p1_t_x;
 								pb1_y = p1_g_y;
 								draw_counter= 8'b00000000;
 								if(score_a == 4'b0111) state = RESET_BLACK;
-								else state = ERASE_PLAYER_1_TANK;
+								else state = DRAW_PLAYER_2_OUT_TANK;
 							end
 							else state = DRAW_PLAYER_1_TANK;
 						end
 						else state = DRAW_PLAYER_1_TANK;
+				 end
+				 DRAW_PLAYER_1_OUT_TANK: begin
+					if (draw_counter < 9'b10000000) begin
+						x = p1_t_x + draw_counter[7:4];
+						y = p1_t_y + draw_counter[3:0];
+						draw_counter = draw_counter + 1'b1;
+						colour = 3'b101;
+					end
+					else begin
+						draw_counter= 8'b00000000;
+						state = DRAW_PLAYER_1_OUT_GUN;
+					end
+				 end
+				 DRAW_PLAYER_1_OUT_GUN: begin
+					if (draw_counter < 6'b10000) begin
+						x = p1_g_x + draw_counter[2:0];
+						y = p1_g_y + draw_counter[4:3];
+						draw_counter = draw_counter + 1'b1;
+						colour = 3'b101;
+					end
+					else begin
+						draw_counter= 8'b00000000;
+						state = ERASE_PLAYER_1_TANK;
+					end
 				 end
 				 DRAW_PLAYER_1_TANK: begin
 					if (draw_counter < 9'b10000000) begin
@@ -448,19 +475,43 @@ the monitor. */
 						end
 						if(p2_fired == 1'b1 && pb2_x + 3'b100 > p1_t_x ) begin
 							if ((pb2_y - 2'b10) > p1_t_y && (pb2_y < p1_t_y + 6'b10000) ) begin
-								score_b <= score_b + 1'b1;
+								score_b = score_b + 4'b0001;
 								p2_fired = 1'b0;
 								pb2_x = p2_t_x;
 								pb2_y = p2_g_y;
 								draw_counter= 8'b00000000;
-								if(score_b == 4'b0011) state = RESET_BLACK;
-								else state = ERASE_PLAYER_1_TANK;//+ 
+								if(score_b == 4'b0111) state = RESET_BLACK;
+								else state = DRAW_PLAYER_1_OUT_TANK;//+ 
 							end
 							else state = DRAW_PLAYER_2_TANK;
 						end
 						else begin
 							state = DRAW_PLAYER_2_TANK;
 						end
+				 end
+				 DRAW_PLAYER_2_OUT_TANK: begin
+					if (draw_counter < 9'b10000000) begin
+						x = p2_t_x + draw_counter[7:4];
+						y = p2_t_y + draw_counter[3:0];
+						draw_counter = draw_counter + 1'b1;
+						colour = 3'b101;
+					end
+					else begin
+						draw_counter= 8'b00000000;
+						state = DRAW_PLAYER_2_GUN;
+					end
+				 end
+				 DRAW_PLAYER_2__OUT_GUN: begin
+					if (draw_counter < 6'b10000) begin
+						x = p2_g_x + draw_counter[2:0];
+						y = p2_g_y + draw_counter[4:3];
+						draw_counter = draw_counter + 1'b1;
+						colour = 3'b101;
+					end
+					else begin
+						draw_counter= 8'b00000000;
+						state = ERASE_PLAYER_2_TANK;
+					end
 				 end
 				 DRAW_PLAYER_2_TANK: begin
 					if (draw_counter < 9'b10000000) begin
