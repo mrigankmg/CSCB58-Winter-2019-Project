@@ -73,7 +73,7 @@ the monitor. */
 			.VGA_BLANK(VGA_BLANK_N),
 			.VGA_SYNC(VGA_SYNC_N),
 			.VGA_CLK(VGA_CLK));
-		defparam VGA.RESOLUTION = "160x120";
+		defparam VGA.RESOLUTION = "320x240";
 		defparam VGA.MONOCHROME = "FALSE";
 		defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
 		defparam VGA.BACKGROUND_IMAGE = "black.mif";
@@ -167,13 +167,15 @@ reg [17:0] draw_counter;
 			colour = 3'b000;
 			x = 8'b00000000;
 			y = 8'b00000000;
-			if (SW[0]) state = RESET_BLACK;
+			if (SW[0] || done == 1'b1) state = RESET_BLACK;
         case (state)
 		  RESET_BLACK: begin
 		  	p1_fired = 1'b0;
 			p2_fired = 1'b0;
 			score_a = 4'b0000;
 			score_b = 4'b0000;
+			score_a_tens = 4'b0000;
+			score_b_tens = 4'b0000;
 			if (draw_counter < 17'b10000000000000000) begin
 				x = draw_counter[7:0];
 				y = draw_counter[16:8];
@@ -350,8 +352,8 @@ reg [17:0] draw_counter;
 								if(score_a == 4'b1001)begin
 								score_a <= 4'b0000;
 								score_a_tens <=  score_a_tens + 1'b1;
-                                                                end
-                                                                else score_a <= score_a + 1'b1;
+                        end
+                        else score_a <= score_a + 1'b1;
 								p1_fired = 1'b0;
 								pb1_x = p1_t_x;
 								pb1_y = p1_g_y;
@@ -500,8 +502,8 @@ reg [17:0] draw_counter;
 								if(score_b == 4'b1001)begin
 								score_b <= 4'b0000;
 								score_b_tens <=  score_b_tens + 1'b1;
-                                                                end
-                                                                else score_b <= score_b + 1'b1;
+                        end
+                        else score_b <= score_b + 1'b1;
 								p2_fired = 1'b0;
 								pb2_x = p2_t_x;
 								pb2_y = p2_g_y;
@@ -588,9 +590,6 @@ reg [17:0] draw_counter;
     end
 endmodule
 
-module bullet(input clock, input fire);
-
-endmodule
 
 
 
