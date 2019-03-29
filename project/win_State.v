@@ -29,13 +29,13 @@ module cowboy_gunner
 	input			CLOCK_50;				//	50 MHz
 	input   [3:0]   KEY;
 	input   [17:0]   SW;
-	input PS2_KBCLK;
-	input PS2_KBDAT;
+	input PS2_KBCLK; // for keyboard
+	input PS2_KBDAT; // for keyboard
 	output [17:0] LEDR;
-	wire [6:0] ASCII_value;
+	wire [6:0] ASCII_value; // tracks the asciivalue for the key pressed 
    wire [7:0] kb_scan_code;
 	wire kb_sc_ready, kb_letter_case;
-	wire resetn;
+	wire resetn; // to reset the board 
   	assign resetn = SW[9];
 
 	// Declare your inputs and outputs here
@@ -163,7 +163,9 @@ reg [17:0] draw_counter;
 					 DRAW_PLAYER_1_WIN_TANK     = 7'b0011111,
 					 DRAW_PLAYER_2_WIN_TANK     = 7'b0100000,
 					 DRAW_PLAYER_1_WIN_GUN      = 7'b0100001,
-DRAW_PLAYER_2_WIN_GUN = 7'b0100010;
+					 DRAW_PLAYER_2_WIN_GUN      = 7'b0100010,
+					 ERASE_PLAYER_1_LOSS_BULLET = 7'b0100011,
+					 ERASE_PLAYER_2_LOSS_BULLET = 7'b0100100;
 					
 					
 	clock(.clock(CLOCK_50), .clk(frame));
@@ -178,17 +180,17 @@ DRAW_PLAYER_2_WIN_GUN = 7'b0100010;
 			if (SW[0]) state = RESET_BLACK;
 			if (done == 1'b1) begin
 				if(score_a_tens > score_b_tens) begin
-					state = ERASE_PLAYER_1_LOSS_TANK;
+					state = ERASE_PLAYER_2_LOSS_TANK;
 				end
 				else if (score_b_tens > score_a_tens) begin
-					state = ERASE_PLAYER_2_LOSS_TANK;
+					state = ERASE_PLAYER_1_LOSS_TANK;
 				end
 				else begin
 					if (score_a > score_b) begin
-						state = ERASE_PLAYER_1_LOSS_TANK;
+						state = ERASE_PLAYER_2_LOSS_TANK;
 					end
 					else if(score_b > score_a) begin
-						state = ERASE_PLAYER_2_LOSS_TANK;
+						state = ERASE_PLAYER_1_LOSS_TANK;
 					end
 					else state = RESET_BLACK;
 				end
@@ -541,6 +543,32 @@ DRAW_PLAYER_2_WIN_GUN = 7'b0100010;
 							state = DRAW_PLAYER_2_TANK;
 						end
 				 end
+				 
+				 ERASE_PLAYER_1_LOSS_BULLET: begin
+				if (draw_counter < 5'b1000) begin
+					x = pb1_x + draw_counter[1:0];
+					y = pb1_y + draw_counter[3:2];
+					draw_counter = draw_counter + 1'b1;
+					colour = 3'b000;
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = ERASE_PLAYER_2_LOSS_BULLET;
+				end
+			 end
+			  ERASE_PLAYER_2_LOSS_BULLET: begin
+				 if (draw_counter < 5'b1000) begin
+					x = pb2_x + draw_counter[1:0];
+					y = pb2_y + draw_counter[3:2];
+					draw_counter = draw_counter + 1'b1;
+					colour = 3'b000
+				end
+				else begin
+					draw_counter= 8'b00000000;
+					state = ERASE_PLAYER_1_LOSS_BULLET;
+				end
+			 end
+				 
 				 ERASE_PLAYER_2_LOSS_TANK: begin
 					 if (draw_counter < 9'b10000000) begin
 						x = p2_t_x + draw_counter[7:4];
@@ -586,7 +614,7 @@ DRAW_PLAYER_2_WIN_GUN = 7'b0100010;
 					end
 					else begin
 						draw_counter= 8'b00000000;
-						state = ERASE_PLAYER_2_LOSS_TANK;
+						state = ERASE_PLAYER_1_LOSS_BULLET;
 					end
 				 end
 				 DRAW_PLAYER_2_WIN_TANK: begin
@@ -594,7 +622,7 @@ DRAW_PLAYER_2_WIN_GUN = 7'b0100010;
 						x = p2_t_x + draw_counter[7:4];
 						y = p2_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
-						colour = 3'b000;
+						colour = 3'b110;
 					end
 					else begin
 						draw_counter= 9'b00000000;
@@ -606,11 +634,11 @@ DRAW_PLAYER_2_WIN_GUN = 7'b0100010;
 						x = p2_g_x + draw_counter[2:0];
 						y = p2_g_y + draw_counter[4:3];
 						draw_counter = draw_counter + 1'b1;
-						colour = 3'b000;
+						colour = 3'b110;
 					end
 					else begin
 						draw_counter= 8'b00000000;
-						state = DRAW_PLAYER_1_WIN_TANK;
+						state = ERASE_PLAYER_1_LOSS_BULLET;
 					end
 				 end
 			 ERASE_PLAYER_1_LOSS_TANK: begin
@@ -618,7 +646,7 @@ DRAW_PLAYER_2_WIN_GUN = 7'b0100010;
 						x = p1_t_x + draw_counter[7:4];
 						y = p1_t_y + draw_counter[3:0];
 						draw_counter = draw_counter + 1'b1;
-						colour = 3'b110;
+						colour = 3'b000;
 					end
 					else begin
 						draw_counter= 8'b00000000;
@@ -630,7 +658,7 @@ DRAW_PLAYER_2_WIN_GUN = 7'b0100010;
 						x = p1_g_x + draw_counter[2:0];
 						y = p1_g_y + draw_counter[4:3];
 						draw_counter = draw_counter + 1'b1;
-						colour = 3'b110;
+						colour = 3'b000;
 					end
 					else begin
 						draw_counter= 8'b00000000;
